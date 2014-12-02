@@ -1,3 +1,12 @@
+# filemanager.aal is a model & adapter defined in AAL/Python.
+# fMBT automatically generates and executes tests against
+# the Tizen Phone application, using inputs and state
+# verifications (tags) defined in this file.
+
+# Based on https://github.com/askervin/fmbt-androidtest
+
+# Author: Oleksandr Pylkevych o.pylkevych@gmail.com
+
 # preview-image-path: bitmaps
 
 aal "tizen_filemanager" {
@@ -12,19 +21,27 @@ aal "tizen_filemanager" {
     variables { fg_app, fm_view, files }
 
     initial_state {
+        # The "state" of the model is a unique combination of
+        # values of the variables defined above.
+
+        # fg_app is the foreground application, "homescreen" or "file manager"
         fg_app = "homescreen"
+        
+        #fm_view is the main (first view) of file manager application after launch
         fm_view = "main"
     }
 
     adapter_init {
+        # Global variable "d" is the Device instance connected
+        # to the emulator.
         global d
         d = fmbttizen.Device()
-        #d.bitmapPath = "bitmaps"
         d.enableVisualLog("deviceLog.html", timeFormat="%T.%f")
 
         time.sleep(2)
         d.refreshScreenshot()
 
+        # If the device is in lockscreen, unlock it.
         if d.verifyBitmap("bitmaps/lockscreen-lock.png"):
             d.swipe((0.1, 0.8), "east")
             waitTransition()
@@ -38,18 +55,37 @@ aal "tizen_filemanager" {
     }
 
     tag "homescreen" {
+         # Tags are associated to states where the guard returns True.
         guard() { return fg_app == "homescreen" }
+        # Tagged states are verified when entered by executing
+        # adapter blocks of all tags in the state.
         adapter() {
             assert d.waitBitmap("bitmaps/home-fm.png"), "not in home screen!"
         }
 
         input "launch filemanager" {
+            # A test step (like "launch phone") can be tested when
+            # its guards and guards of outer blocks (like "homescreen")
+            # return True. If a guard block is not defined, the default
+            # for it is "return True". That is, "launch phone" can be
+            # tested whenever in a state with the "homescreen" tag.
             adapter() {
+                # The adapter block executes the test step. In this case,
+                # it gives input "launch filemanager" to the emulator.
                 d.tapBitmap("bitmaps/home-fm.png")
+                # Instead of only tapping the dialer icon at the
+                # homescreen, this adapter continues to the state where
+                # the device is ready for next state verification. That
+                # is, wait for a while and update the screenshot after
+                # that. This design is used in all adapter blocks in
+                # this example.
                 waitTransition()
                 d.refreshScreenshot()
             }
             body() {
+                # If the adapter block has been successfully executed
+                # (no exceptions, not returning False or observed actions),
+                # the state of the model is changed by the body block.
                 fg_app = "filemanager"
                 fm_view = "main"
             }
@@ -60,7 +96,6 @@ aal "tizen_filemanager" {
         guard() { return fg_app == "filemanager" }
         adapter() {
             if fm_view == "main":
-                #assert d.waitOcrText("Storages", preprocess="")
                 assert d.waitOcrText("Phone", preprocess="")
         }
 
