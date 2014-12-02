@@ -14,9 +14,9 @@ Prerequisites
 
 - Configure and launch Tizen device emulator
 
-- Install libpython-2.7.1-1.4.i586.rpm and python-base-2.7.1-1.4.i586.rpm on emulator 
+- [Install](https://github.com/amazpyel/fmbt-tizentest/blob/master/python_install.md) libpython-2.7.1-1.4.i586.rpm and python-base-2.7.1-1.4.i586.rpm on emulator 
 
-- Build and install File Manager Sample application on emulator.
+- [Build and install](https://github.com/amazpyel/fmbt-tizentest/blob/master/filemanager_installing.md) File Manager Sample application on emulator.
 
 - If everything is ok, you can open Tizen device screenlock by executing:
 
@@ -57,3 +57,7 @@ filemanager.aal enables testing
 - creating folder
 
 - deleting folder 
+
+fMBT official repo
+-----------------------
+https://github.com/01org/fMBT
