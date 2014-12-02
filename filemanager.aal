@@ -1,0 +1,151 @@
+# preview-image-path: bitmaps
+
+aal "tizen_filemanager" {
+    language "python" {
+        import fmbttizen
+        import time
+
+        def waitTransition():
+            time.sleep(.75)
+    }
+
+    variables { fg_app, fm_view, files }
+
+    initial_state {
+        fg_app = "homescreen"
+        fm_view = "main"
+    }
+
+    adapter_init {
+        global d
+        d = fmbttizen.Device()
+        #d.bitmapPath = "bitmaps"
+        d.enableVisualLog("deviceLog.html", timeFormat="%T.%f")
+
+        time.sleep(2)
+        d.refreshScreenshot()
+
+        if d.verifyBitmap("bitmaps/lockscreen-lock.png"):
+            d.swipe((0.1, 0.8), "east")
+            waitTransition()
+            d.pressHome()
+            waitTransition()
+            d.refreshScreenshot()
+    }
+
+    adapter_exit {
+        d.close()
+    }
+
+    tag "homescreen" {
+        guard() { return fg_app == "homescreen" }
+        adapter() {
+            assert d.waitBitmap("bitmaps/home-fm.png"), "not in home screen!"
+        }
+
+        input "launch filemanager" {
+            adapter() {
+                d.tapBitmap("bitmaps/home-fm.png")
+                waitTransition()
+                d.refreshScreenshot()
+            }
+            body() {
+                fg_app = "filemanager"
+                fm_view = "main"
+            }
+        }
+    }
+
+    tag "filemanager" {
+        guard() { return fg_app == "filemanager" }
+        adapter() {
+            if fm_view == "main":
+                #assert d.waitOcrText("Storages", preprocess="")
+                assert d.waitOcrText("Phone", preprocess="")
+        }
+
+        input "create folder" {
+            guard() {
+                return (fm_view in ["main", "downloads-clear"])
+            }
+            adapter() {
+                d.tapOcrText("Phone")
+                waitTransition()
+                d.refreshScreenshot()
+                d.tapOcrText("Downloads")
+                waitTransition()
+                d.refreshScreenshot()
+                if d.verifyBitmap("bitmaps/edit-dimmed.png"):
+                    d.tapBitmap("bitmaps/more-button.png")
+                    waitTransition()
+                    d.refreshScreenshot()
+                    d.tapOcrText("Create")
+                    waitTransition()
+                    d.refreshScreenshot()
+                    d.tapBitmap("bitmaps/ok-button.png")
+                    waitTransition()
+                    d.refreshScreenshot()
+                else:
+                    d.tapBitmap("bitmaps/more-button.png")
+                    waitTransition()
+                    d.refreshScreenshot()
+                    d.tapOcrText("Create")
+                    waitTransition()
+                    d.refreshScreenshot()
+                    d.tapBitmap("bitmaps/ok-button.png")
+                    waitTransition()
+                    d.refreshScreenshot()
+                    assert d.verifyBitmap("bitmaps/already-exists.png")
+                    d.pressBack()
+                    waitTransition()
+                    d.refreshScreenshot()
+            }
+            body() {
+                fm_view = "downloads"
+                files = 1
+            }
+        }
+
+        input "delete all" {
+            guard() { return fm_view == "downloads"}
+            adapter() {
+                if not d.verifyBitmap("bitmaps/edit-dimmed.png"):
+                    d.tapBitmap("bitmaps/edit.png")
+                    waitTransition()
+                    d.refreshScreenshot()
+                    d.tapOcrText("Select")
+                    waitTransition()
+                    d.refreshScreenshot()
+                    d.tapBitmap("bitmaps/delete.png")
+                    assert d.waitBitmap("bitmaps/delete-confirmation.png")
+                    d.refreshScreenshot()
+                    d.tapBitmap("bitmaps/ok-button.png")
+                    waitTransition()
+                    d.refreshScreenshot()
+                    assert d.verifyBitmap("bitmaps/edit-dimmed.png")
+                else:
+                    assert d.verifyBitmap("bitmaps/edit-dimmed.png")
+            }
+            body() {
+                fm_view == "downloads-clear"
+                files = 0
+            }
+        }
+    }
+
+    input "return to homescreen" {
+        guard() { return fg_app != "homescreen" }
+            adapter() {
+                d.pressHome()
+                waitTransition()
+                d.refreshScreenshot()
+                d.pressHome(hold=2.0)
+                waitTransition()
+                d.refreshScreenshot()
+                d.tapBitmap("bitmaps/clear-all.png")
+                waitTransition()
+                d.refreshScreenshot()
+            }
+            body() { fg_app = "homescreen" }
+    }
+}
