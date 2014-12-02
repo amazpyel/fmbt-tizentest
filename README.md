@@ -36,7 +36,7 @@ $ fmbt smoke.conf
 Debugging a test
 ----------------
 
-d.enableVisualLog(...) in phone.aal starts logging whatever happens in
+d.enableVisualLog(...) in filemanager.aal starts logging whatever happens in
 the Device instance. The log is written to devicelog.html. Open the
 log with your browser:
 
